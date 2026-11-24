@@ -13,6 +13,7 @@
 #include "../Source/PluginEditor.h"
 #include <cmath>
 #include <map>
+#include "LicenceTests.h"
 
 using APP = AutoBuildProAudioProcessor;
 using Buf = juce::AudioBuffer<float>;
@@ -595,7 +596,7 @@ static void snapshots (const juce::File& outDir, const Buf& music)
         std::printf ("  %s\n", name);
     };
     snap ("ui-1-lite.png", hz::LicenceInfo::none, nullptr, nullptr);
-    snap ("ui-2-lite-pro-panel.png", hz::LicenceInfo::none, "STUTTER IS A PRO BUILD STYLE", nullptr);
+    snap ("ui-2-lite-pro-panel.png", hz::LicenceInfo::none, "STUTTER IS AN UPGRADE BUILD STYLE", nullptr);
     snap ("ui-3-trial.png", hz::LicenceInfo::trial, nullptr, [] (APP& p, FakeHost&) { setStyle (p, ab::riser); });
     snap ("ui-4-trial-ended.png", hz::LicenceInfo::trialExpired, nullptr, nullptr);
     snap ("ui-5-trial-ended-panel.png", hz::LicenceInfo::trialExpired, "", nullptr);
@@ -606,6 +607,17 @@ static void snapshots (const juce::File& outDir, const Buf& music)
     snap ("ui-8-pro-panel.png", hz::LicenceInfo::pro, "", nullptr);
     snap ("ui-9-manual.png", hz::LicenceInfo::none, nullptr, [] (APP& p, FakeHost&) { setParam (p, "manual", 1); setParam (p, "build", 55); });
     snap ("ui-10-stopped.png", hz::LicenceInfo::none, nullptr, [] (APP&, FakeHost& h) { h.playing = false; });
+    // Licence states (Launch prep renders)
+    snap ("licence-1-free.png", hz::LicenceInfo::none, nullptr, nullptr);
+    snap ("licence-2-free-panel.png", hz::LicenceInfo::none, "", nullptr);
+    snap ("licence-3-trial.png", hz::LicenceInfo::trial, nullptr, [] (APP& p, FakeHost&) { setStyle (p, ab::riser); });
+    snap ("licence-4-trial-panel.png", hz::LicenceInfo::trial, "", nullptr);
+    snap ("licence-5-trial-ended.png", hz::LicenceInfo::trialExpired, nullptr, nullptr);
+    snap ("licence-6-trial-ended-panel.png", hz::LicenceInfo::trialExpired, "", nullptr);
+    snap ("licence-7-licensed.png", hz::LicenceInfo::pro, nullptr, [] (APP& p, FakeHost&) { setStyle (p, ab::mega); });
+    snap ("licence-8-licensed-panel.png", hz::LicenceInfo::pro, "", nullptr);
+    snap ("licence-9-saved-upgrade-settings.png", hz::LicenceInfo::trialExpired, nullptr, [] (APP& p, FakeHost&)
+          { setStyle (p, ab::riser); setParam (p, "curve", 45); setParam (p, "wait", 2); setParam (p, "impact", 85); });
     snap ("ui-11-pro-32-bars.png", hz::LicenceInfo::pro, nullptr, [] (APP& p, FakeHost&) { setParam (p, "bars", 5); setParam (p, "wait", 6); setStyle (p, ab::stutterRoll); }, 100.0);
 }
 
@@ -670,5 +682,22 @@ int main (int argc, char** argv)
     }
 
     std::printf ("\n%s: %d failure(s)\n", failures == 0 ? "ALL PASS" : "FAILURES", failures);
-    return failures == 0 ? 0 : 1;
+
+    hztest::runLicenceTests<APP> ("autobuildpro", [] (APP& p) { return p.proUnlocked.load(); });
+    hztest::runSavedSettingsTests<APP> ([] (APP& p)
+    {
+        setStyle (p, ab::stutterRoll); setParam (p, "curve", -40); setParam (p, "wait", 3); setParam (p, "impact", 90); setParam (p, "downlifter", 10);
+    });
+    {
+        // each upgrade-only control is flagged on its own, and plain Lite controls never are
+        auto flagged = [] (std::function<void (APP&)> f) { APP p; p.setLicenceInfo ({}); f (p); return p.usesUpgradeSettings(); };
+        hztest::expect (flagged ([] (APP& p) { setParam (p, "curve", 30); }), "saved CURVE is flagged");
+        hztest::expect (flagged ([] (APP& p) { setParam (p, "wait", 2); }), "saved WAIT is flagged");
+        hztest::expect (flagged ([] (APP& p) { setStyle (p, ab::riser); }), "saved RISER style is flagged");
+        hztest::expect (flagged ([] (APP& p) { setParam (p, "impact", 10); }), "saved IMPACT is flagged");
+        hztest::expect (! flagged ([] (APP& p) { setParam (p, "build", 30); setParam (p, "bars", 1); setParam (p, "output", -3); setParam (p, "manual", 1); }),
+                        "Lite controls (BUILD, BARS, OUTPUT, MANUAL) aren't flagged");
+    }
+    const int lic = hztest::finish();
+    return (failures == 0 && lic == 0) ? 0 : 1;
 }

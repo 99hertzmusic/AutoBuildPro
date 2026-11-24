@@ -65,7 +65,7 @@ option(AUTOBUILDPRO_BUILD_TEST "Build the offline test app" OFF)
 if(AUTOBUILDPRO_BUILD_TEST)
     juce_add_console_app(AutoBuildProTest PRODUCT_NAME "AutoBuildProTest")
     target_sources(AutoBuildProTest PRIVATE Test/Main.cpp ${AUTOBUILDPRO_SOURCES})
-    target_compile_definitions(AutoBuildProTest PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_STANDALONE_APPLICATION=1
+    target_compile_definitions(AutoBuildProTest PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_STANDALONE_APPLICATION=1 JUCE_MODAL_LOOPS_PERMITTED=1
         AUTOBUILDPRO_TEST=1 JucePlugin_VersionString="1.0.0" JUCE_PLUGINHOST_VST3=1)
     target_compile_features(AutoBuildProTest PRIVATE cxx_std_17)
     target_link_libraries(AutoBuildProTest PRIVATE AutoBuildProData juce::juce_audio_utils juce::juce_dsp juce::juce_recommended_config_flags)

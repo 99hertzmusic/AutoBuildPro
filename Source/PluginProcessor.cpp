@@ -18,6 +18,29 @@ AutoBuildProAudioProcessor::AutoBuildProAudioProcessor()
     pImpact = apvts.getRawParameterValue ("impact");
     pDown   = apvts.getRawParameterValue ("downlifter");
     setLicenceInfo (licence.check());
+    licenceWatcher = std::make_unique<hz::LicenceWatcher> (licence, licenceInfo, [this] (const hz::LicenceInfo& i) { setLicenceInfo (i); });
+}
+
+bool AutoBuildProAudioProcessor::isSavedUpgradeValue (const juce::String& id) const
+{
+    bool gated = false;
+    if (id == "curve")           gated = ab::gate::proCurve;
+    else if (id == "wait")       gated = ab::gate::proWait;
+    else if (id == "impact")     gated = ab::gate::proImpact;
+    else if (id == "downlifter") gated = ab::gate::proDownlifter;
+    else for (int l = 0; l < ab::numLayers; ++l) if (id == ab::layerId (l)) gated = ab::gate::proLayers;
+    if (! gated) return false;
+    auto* prm = apvts.getParameter (id);
+    return prm != nullptr && std::abs (prm->getValue() - prm->getDefaultValue()) > 1.0e-4f;
+}
+
+bool AutoBuildProAudioProcessor::usesUpgradeSettings() const
+{
+    for (auto id : { "curve", "wait", "impact", "downlifter" })
+        if (isSavedUpgradeValue (id)) return true;
+    for (int l = 0; l < ab::numLayers; ++l)
+        if (isSavedUpgradeValue (ab::layerId (l))) return true;
+    return false;
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout AutoBuildProAudioProcessor::createParameterLayout()

@@ -25,6 +25,7 @@ class ProPanel : public juce::Component
 public:
     explicit ProPanel (AutoBuildProAudioProcessor& p);
     void show (const juce::String& reason);
+    void licenceChanged();   // the processor's licence changed (another instance, trial expiry): redraw if open
     void paint (juce::Graphics&) override;
     void resized() override;
     void mouseDown (const juce::MouseEvent& e) override;   // click outside the card closes it
@@ -38,7 +39,7 @@ private:
     juce::TextEditor emailBox, keyBox;
     juce::ToggleButton subscribe { "Send me tips and offers" };
     juce::TextButton trialButton { "START 7-DAY FREE TRIAL" }, unlockButton { "UNLOCK" },
-                     buyButton { "BUY PRO" }, closeButton { "CLOSE" };
+                     buyButton { "UPGRADE" }, closeButton { "CLOSE" };
 };
 
 // The hero display: the build curve over the bars, the playhead, the drop and what happens after it.
@@ -91,6 +92,8 @@ private:
     juce::Image background;
     juce::Rectangle<int> ledArea, styleArea, secBuild, secLayers, secDrop, secOut;
     juce::String ledLabel, ledText, ledRightLabel, ledRightText;
+    bool upgradeNudge = false;
+    int seenLicenceVersion = -1;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AutoBuildProAudioProcessorEditor)
 };

@@ -47,7 +47,14 @@ public:
     hz::Licence licence { "autobuildpro" };
     hz::LicenceInfo licenceInfo;                 // message thread
     std::atomic<bool> proUnlocked { false };     // audio thread reads this
-    void setLicenceInfo (const hz::LicenceInfo& i) { licenceInfo = i; proUnlocked.store (i.unlocked()); }
+    std::atomic<int> licenceVersion { 0 };       // bumps on every change, so open editors can follow
+    void setLicenceInfo (const hz::LicenceInfo& i) { licenceInfo = i; proUnlocked.store (i.unlocked()); ++licenceVersion; }
+    std::unique_ptr<hz::LicenceWatcher> licenceWatcher;   // picks up keys saved by other instances / trial expiry
+
+    // Upgrade-only settings saved in the session (kept as they are, played as Lite without a licence).
+    // A locked parameter counts once it's been moved off its default (a fresh Lite project never is).
+    bool isSavedUpgradeValue (const juce::String& paramId) const;
+    bool usesUpgradeSettings() const;
 
     // ── What actually runs, after the Lite/Pro gate ─────────────────────────
     struct Effective
