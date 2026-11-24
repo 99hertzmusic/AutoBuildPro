@@ -57,7 +57,7 @@ target_compile_definitions(AutoBuildPro PUBLIC
 target_compile_features(AutoBuildPro PUBLIC cxx_std_17)
 
 target_link_libraries(AutoBuildPro
-    PRIVATE AutoBuildProData juce::juce_audio_utils juce::juce_dsp
+    PRIVATE AutoBuildProData juce::juce_audio_utils juce::juce_dsp juce::juce_cryptography
     PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_warning_flags)
 
 # Offline test: build timing vs host, clicks, state, Lite gating, levels, licence keys, sound examples, UI snapshots (not shipped)
@@ -68,5 +68,5 @@ if(AUTOBUILDPRO_BUILD_TEST)
     target_compile_definitions(AutoBuildProTest PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_STANDALONE_APPLICATION=1 JUCE_MODAL_LOOPS_PERMITTED=1
         AUTOBUILDPRO_TEST=1 JucePlugin_VersionString="1.0.0" JUCE_PLUGINHOST_VST3=1)
     target_compile_features(AutoBuildProTest PRIVATE cxx_std_17)
-    target_link_libraries(AutoBuildProTest PRIVATE AutoBuildProData juce::juce_audio_utils juce::juce_dsp juce::juce_recommended_config_flags)
+    target_link_libraries(AutoBuildProTest PRIVATE AutoBuildProData juce::juce_audio_utils juce::juce_dsp juce::juce_cryptography juce::juce_recommended_config_flags)
 endif()

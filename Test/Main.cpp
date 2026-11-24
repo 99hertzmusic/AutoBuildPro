@@ -684,6 +684,7 @@ int main (int argc, char** argv)
     std::printf ("\n%s: %d failure(s)\n", failures == 0 ? "ALL PASS" : "FAILURES", failures);
 
     hztest::runLicenceTests<APP> ("autobuildpro", [] (APP& p) { return p.proUnlocked.load(); });
+    hztest::renderLicenceStates<APP> ("autobuildpro", outDir);
     hztest::runSavedSettingsTests<APP> ([] (APP& p)
     {
         setStyle (p, ab::stutterRoll); setParam (p, "curve", -40); setParam (p, "wait", 3); setParam (p, "impact", 90); setParam (p, "downlifter", 10);
